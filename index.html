@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador QTI 2.1 para Blackboard</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #334155;
+    --border: #475569;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --code-bg: #0f172a;
+    --mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 1rem;
+  }
+  .container { max-width: 1280px; margin: 0 auto; }
+  header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+  }
+  header h1 {
+    font-size: 1.6rem;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+  header p { color: var(--text-muted); font-size: 0.95rem; }
+  header .badges { margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .badge {
+    background: var(--surface-2);
+    color: var(--text);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.5rem;
+  }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .card h2 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card h2 .num {
+    background: var(--primary);
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  textarea {
+    width: 100%;
+    min-height: 400px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    padding: 1rem;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+  .btn-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+  button {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.6rem 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  button:hover { background: var(--border); }
+  button.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    font-weight: 600;
+  }
+  button.primary:hover { background: var(--primary-hover); }
+  button.success {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+    font-weight: 600;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    display: none;
+  }
+  .status.show { display: block; }
+  .status.success { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); color: #6ee7b7; }
+  .status.error { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; }
+  .status.info { background: rgba(59, 130, 246, 0.15); border: 1px solid var(--primary); color: #93c5fd; }
+  .status ul { margin: 0.5rem 0 0 1.25rem; }
+  .docs { font-size: 0.85rem; }
+  .docs h3 {
+    font-size: 0.875rem;
+    color: var(--text);
+    margin: 1rem 0 0.5rem 0;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .docs h3:first-child { margin-top: 0; }
+  .docs code {
+    background: var(--code-bg);
+    color: #fbbf24;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+  }
+  .docs pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #cbd5e1;
+    margin: 0.5rem 0;
+  }
+  .docs ul { padding-left: 1.25rem; margin: 0.5rem 0; }
+  .docs li { margin-bottom: 0.25rem; color: var(--text-muted); }
+  .docs li strong { color: var(--text); }
+  .docs table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+    font-size: 0.78rem;
+  }
+  .docs th, .docs td {
+    text-align: left;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .docs th { color: var(--text); background: var(--surface-2); }
+  .docs td { color: var(--text-muted); }
+  .docs td code { background: transparent; color: #fbbf24; padding: 0; }
+  .input-group { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+  .input-group label { font-size: 0.85rem; color: var(--text-muted); min-width: 120px; }
+  .input-group input[type="text"] {
+    flex: 1;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  .input-group input:focus { outline: none; border-color: var(--primary); }
+  details { margin-top: 0.75rem; }
+  summary {
+    cursor: pointer;
+    color: var(--primary);
+    font-size: 0.85rem;
+    padding: 0.4rem 0;
+    user-select: none;
+  }
+  summary:hover { color: var(--primary-hover); }
+  footer {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--primary); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  .stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .stat-pill {
+    background: var(--surface-2);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+  }
+  .stat-pill strong { color: var(--text); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Generador QTI 2.1 para Blackboard</h1>
+    <p>Pega tus preguntas con retroalimentación y puntuación, descarga un .zip listo para importar a Blackboard.</p>
+    <div class="badges">
+      <span class="badge">100% cliente</span>
+      <span class="badge">Sin servidor</span>
+      <span class="badge">7 tipos de pregunta</span>
+      <span class="badge">Compatible Ultra y Original</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- Columna izquierda: input + acciones -->
+    <div>
+      <div class="card">
+        <h2><span class="num">1</span> Pega tus preguntas</h2>
+        <div class="input-group">
+          <label for="poolName">Nombre del banco:</label>
+          <input type="text" id="poolName" value="Banco de Preguntas" placeholder="Nombre del banco en Blackboard">
+        </div>
+        <textarea id="input" placeholder="1. [puntos:5] Texto de la pregunta&#10;*A) Respuesta correcta&#10;B) Otra respuesta&#10;+ Retroalimentación correcta&#10;- Retroalimentación incorrecta&#10;&#10;2. ..."></textarea>
+        <div class="btn-row">
+          <button class="primary" id="generateBtn">⬇ Generar ZIP QTI 2.1</button>
+          <button id="exampleBtn">📋 Cargar ejemplo</button>
+          <button id="clearBtn">🗑 Limpiar</button>
+          <button id="copyFormatBtn">📑 Copiar formato</button>
+        </div>
+        <div class="status" id="status"></div>
+        <div class="stats" id="stats"></div>
+      </div>
+
+      <details>
+        <summary>🔍 Ver formato detallado y ejemplos de los 7 tipos</summary>
+        <div class="card" style="margin-top: 0.5rem;">
+          <div class="docs">
+            <h3>Sintaxis general</h3>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Cada pregunta inicia con <code>N.</code> donde N es el número. Los campos opcionales van entre corchetes al inicio:</p>
+            <ul>
+              <li><code>[puntos:N]</code> — puntuación del reactivo (opcional, default = 1)</li>
+              <li><code>[tipo:T]</code> — tipo de pregunta (opcional, default = multiple_choice)</li>
+            </ul>
+
+            <h3>Marcas especiales</h3>
+            <ul>
+              <li><code>*</code> antes de la letra → marca la respuesta correcta</li>
+              <li><code>+</code> al inicio de línea → retroalimentación para respuesta correcta</li>
+              <li><code>-</code> al inicio de línea (con espacio) → retroalimentación para respuesta incorrecta</li>
+              <li><code>=</code> al inicio de línea → respuesta correcta (short_answer, numeric) o ítem ordenado (ordering)</li>
+              <li><code>|</code> separa término y definición en matching</li>
+            </ul>
+
+            <h3>Tipos soportados</h3>
+            <table>
+              <tr><th>Tipo</th><th>Etiqueta</th><th>Marca de correcta</th></tr>
+              <tr><td>Opción múltiple</td><td><code>multiple_choice</code> (default)</td><td><code>*</code> en la letra</td></tr>
+              <tr><td>Respuesta múltiple</td><td><code>multiple_answer</code></td><td><code>*</code> en cada correcta</td></tr>
+              <tr><td>Verdadero/Falso</td><td><code>true_false</code></td><td><code>*</code> en V o F</td></tr>
+              <tr><td>Ordenamiento</td><td><code>ordering</code></td><td>Orden de las líneas <code>=)</code></td></tr>
+              <tr><td>Emparejamiento</td><td><code>matching</code></td><td>Definida por el par <code>|</code></td></tr>
+              <tr><td>Respuesta corta</td><td><code>short_answer</code></td><td>Líneas <code>=</code></td></tr>
+              <tr><td>Numérica</td><td><code>numeric</code></td><td>Líneas <code>=</code></td></tr>
+            </table>
+
+            <h3>Ejemplo 1: Opción múltiple (default)</h3>
+<pre>1. [puntos:5] ¿Qué necesita un municipio para que sus datos generen valor?
+*A) Un proceso analítico que convierta los datos en conocimiento útil.
+B) Más sensores para ampliar la cobertura de captura.
+C) Un sistema de almacenamiento mayor para el histórico.
+D) Una red de transmisión más veloz.
++ ¡Correcto! Los datos requieren un proceso analítico para ser útiles.
+- Incorrecto. Ampliar captura o almacenamiento no resuelve el problema.</pre>
+
+            <h3>Ejemplo 2: Respuesta múltiple</h3>
+<pre>2. [puntos:4] [tipo:multiple_answer] ¿Cuáles son ejemplos de IA estrecha?
+*A) Asistentes de voz como Alexa
+*B) Sistemas de recomendación de Netflix
+C) Un robot que aprende cualquier tarea nueva sin entrenamiento
+*D) Chatbots como ChatGPT
++ Correcto: todas excepto el robot que aprende cualquier tarea sola.
+- Recuerda: la IA actual es estrecha (ANI).</pre>
+
+            <h3>Ejemplo 3: Verdadero / Falso</h3>
+<pre>3. [puntos:2] [tipo:true_false] La IA general (AGI) existe hoy comercialmente.
+*A) Verdadero
+B) Falso
++ ¡Atención! La afirmación dice que AGI existe, lo cual es FALSO.
+- La IA actual es estrecha (ANI), no general.</pre>
+
+            <h3>Ejemplo 4: Ordenamiento</h3>
+<pre>4. [puntos:3] [tipo:ordering] Ordena las etapas del proceso analítico:
+=) Captura de datos
+=) Limpieza y transformación
+=) Análisis estadístico
+=) Toma de decisiones
++ Correcto: captura → limpieza → análisis → decisión.
+- Revisa el orden del flujo analítico.</pre>
+
+            <h3>Ejemplo 5: Emparejamiento</h3>
+<pre>5. [puntos:4] [tipo:matching] Relaciona cada concepto con su definición:
+A) Dato | Hecho bruto sin procesar
+B) Información | Datos organizados con contexto
+C) Conocimiento | Información interpretada
+D) Sabiduría | Conocimiento aplicado con juicio
++ Correcto: es la jerarquía DIKW.
+- Cada nivel agrega valor sobre el anterior.</pre>
+
+            <h3>Ejemplo 6: Respuesta corta</h3>
+<pre>6. [puntos:3] [tipo:short_answer] ¿Qué sigla identifica a la IA General?
+= AGI
+= Inteligencia Artificial General
++ Correcto: AGI (Artificial General Intelligence).
+- La sigla es AGI.</pre>
+
+            <h3>Ejemplo 7: Numérica</h3>
+<pre>7. [puntos:2] [tipo:numeric] ¿Cuántos bits tiene un byte?
+= 8
++ Correcto: 1 byte = 8 bits.
+- 1 byte = 8 bits.</pre>
+
+            <h3>Consejos</h3>
+            <ul>
+              <li>El <code>[puntos:N]</code> puede ser decimal: <code>[puntos:2.5]</code></li>
+              <li>Si omites <code>+</code> o <code>-</code>, esa retroalimentación no se generará</li>
+              <li>Si omites <code>[tipo:T]</code>, se asume <code>multiple_choice</code></li>
+              <li>El texto de la pregunta puede continuar en varias líneas antes de las opciones</li>
+              <li>Para múltiples respuestas correctas en short_answer, usa varias líneas <code>=</code></li>
+            </ul>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Columna derecha: documentación compacta -->
+    <div>
+      <div class="card">
+        <div class="docs">
+          <h3>⚡ Flujo rápido</h3>
+          <ol style="padding-left: 1.25rem; color: var(--text-muted);">
+            <li>Pega tus preguntas (formato enriquecido)</li>
+            <li>Da clic en <strong>Generar ZIP</strong></li>
+            <li>Descarga el <code>.zip</code></li>
+            <li>En Blackboard: <strong>Administrar bancos de preguntas</strong> → <strong>+</strong> → <strong>Importar desde paquete QTI 2.1</strong></li>
+          </ol>
+
+          <h3>📥 Importar en Blackboard</h3>
+          <ul>
+            <li><strong>Ultra:</strong> Libro de calificaciones → Configuración → Bancos de preguntas → <code>+</code> → Importar QTI 2.1</li>
+            <li><strong>Original:</strong> Herramientas del curso → Tests, Surveys, and Pools → Pools → Import Pool</li>
+          </ul>
+
+          <h3>🔒 Privacidad</h3>
+          <p style="color: var(--text-muted); font-size: 0.8rem;">Todo el procesamiento ocurre en tu navegador. Tus preguntas no se envían a ningún servidor.</p>
+
+          <h3>🤖 Prompt para Gemini/ChatGPT</h3>
+          <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.5rem;">Pega este prompt junto con tu evaluación para que la IA te devuelva el formato correcto:</p>
+<pre>Tengo preguntas para subir a Blackboard con retroalimentación
+y puntuación. Conviértelas a este formato (una pregunta por bloque):
+
+N. [puntos:P] [tipo:T] Texto de la pregunta
+*A) Respuesta correcta (con * al inicio)
+B) Otra respuesta
+C) Otra respuesta
+D) Otra respuesta
++ Retroalimentación para respuesta correcta
+- Retroalimentación para respuesta incorrecta
+
+Reglas:
+- [puntos:P] = puntos del reactivo (puede ser decimal)
+- [tipo:T] = multiple_choice | multiple_answer | true_false |
+  ordering | matching | short_answer | numeric
+  (si es opción múltiple simple, omite [tipo:])
+- Marca con * la(s) respuesta(s) correcta(s)
+- Para ordering: usa "=) item" en el orden correcto
+- Para matching: usa "A) término | definición"
+- Para short_answer/numeric: usa "= respuesta"
+- + = retroalimentación respuesta correcta
+- - = retroalimentación respuesta incorrecta
+- Conserva el idioma original de las preguntas
+- Genera retroalimentación pedagógica específica por pregunta
+
+Aquí están las preguntas:
+[PEGA AQUÍ TU EVALUACIÓN]</pre>
+          <button id="copyPromptBtn" style="margin-top: 0.5rem; font-size: 0.8rem;">📋 Copiar prompt</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 1rem;">
+        <div class="docs">
+          <h3>🛠 Solución de problemas</h3>
+          <ul>
+            <li><strong>No se importan las preguntas:</strong> verifica que el ZIP tenga 2 archivos (imsmanifest.xml y res00001.dat)</li>
+            <li><strong>Faltan puntos:</strong> revisa que <code>[puntos:N]</code> esté al inicio de cada pregunta</li>
+            <li><strong>Falta retroalimentación:</strong> revisa que las líneas <code>+</code> y <code>-</code> estén presentes</li>
+            <li><strong>Caracteres raros:</strong> el parser escapa automáticamente &lt; &gt; &amp; "</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Generador QTI 2.1 para Blackboard · Funciona 100% en el navegador · Sin tracking, sin servidor, sin límites.
+  </footer>
+
+</div>
+
+<!-- JSZip para generar el ZIP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script>
+// =====================================================================
+// LÓGICA QTI - Embebida para funcionar offline si se descarga el archivo
+// =====================================================================
+
+function escapeXml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function parseQuestions(input) {
+  const lines = input.split('\n');
+  const questions = [];
+  let current = null;
+
+  const numberRegex = /^(\d+)\.\s*(.*)$/;
+  const pointsRegex = /\[puntos:\s*(\d+(?:\.\d+)?)\s*\]/i;
+  const typeRegex = /\[tipo:\s*([a-z_]+)\s*\]/i;
+  const optionRegex = /^(\*?)\s*([A-Za-z])\)\s*(.*)$/;
+  const orderRegex = /^=\s*(?:(\d+)\))?\s*(.+)$/;
+  const matchRegex = /^([A-Za-z])\)\s*(.*?)\s*\|\s*(.+)$/;
+  const answerRegex = /^=\s*(.+)$/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    const qMatch = line.match(numberRegex);
+    if (qMatch) {
+      if (current) questions.push(current);
+      let rest = qMatch[2];
+      let points = 1;
+      let type = 'multiple_choice';
+
+      const pm = rest.match(pointsRegex);
+      if (pm) { points = parseFloat(pm[1]); rest = rest.replace(pm[0], '').trim(); }
+      const tm = rest.match(typeRegex);
+      if (tm) { type = tm[1].toLowerCase(); rest = rest.replace(tm[0], '').trim(); }
+
+      current = {
+        number: parseInt(qMatch[1], 10),
+        points: points, type: type, text: rest,
+        options: [], answers: [], matches: [],
+        correctFeedback: '', incorrectFeedback: ''
+      };
+      continue;
+    }
+
+    if (!current) continue;
+
+    if (line.startsWith('+')) {
+      const fb = line.substring(1).trim();
+      if (fb) current.correctFeedback = (current.correctFeedback ? current.correctFeedback + ' ' : '') + fb;
+      continue;
+    }
+
+    if (line.startsWith('-')) {
+      const after = line.substring(1).trim();
+      const looksLikeOption = /^[A-Za-z]\)\s/.test(after);
+      if (!looksLikeOption && after) {
+        current.incorrectFeedback = (current.incorrectFeedback ? current.incorrectFeedback + ' ' : '') + after;
+        continue;
+      }
+    }
+
+    if (current.type === 'matching') {
+      const mMatch = line.match(matchRegex);
+      if (mMatch) {
+        current.matches.push({
+          label: mMatch[1].toUpperCase(),
+          term: mMatch[2].trim(),
+          definition: mMatch[3].trim()
+        });
+        continue;
+      }
+    }
+
+    if (current.type === 'ordering') {
+      const oMatch = line.match(orderRegex);
+      if (oMatch) {
+        current.options.push({ order: current.options.length + 1, text: oMatch[2].trim() });
+        continue;
+      }
+    }
+
+    if (current.type === 'short_answer' || current.type === 'numeric') {
+      const aMatch = line.match(answerRegex);
+      if (aMatch) { current.answers.push(aMatch[1].trim()); continue; }
+    }
+
+    const opMatch = line.match(optionRegex);
+    if (opMatch) {
+      current.options.push({
+        correct: opMatch[1] === '*',
+        label: opMatch[2].toUpperCase(),
+        text: opMatch[3].trim()
+      });
+      continue;
+    }
+
+    if (current.options.length === 0 && current.answers.length === 0 &&
+        current.matches.length === 0 && !current.correctFeedback && !current.incorrectFeedback) {
+      current.text += ' ' + line;
+    }
+  }
+  if (current) questions.push(current);
+  return questions;
+}
+
+function generateItemXML(q, index) {
+  const ident = 'Q' + (index + 1);
+  const title = 'Pregunta ' + (index + 1);
+  let xml = '';
+  xml += '  <item ident="' + ident + '" title="' + escapeXml(title) + '">\n';
+  xml += '    <itemmetadata>\n      <qtimetadata>\n';
+  xml += '        <qtimetadatafield>\n          <fieldlabel>qmd_weighting</fieldlabel>\n          <fieldentry>' + q.points + '</fieldentry>\n        </qtimetadatafield>\n';
+
+  const typeMap = {
+    multiple_choice: 'Multiple Choice', multiple_answer: 'Multiple Answer',
+    true_false: 'True/False', ordering: 'Order', matching: 'Matching',
+    short_answer: 'Fill in the Blank', numeric: 'Numeric'
+  };
+  const bbType = typeMap[q.type] || 'Multiple Choice';
+  xml += '        <qtimetadatafield>\n          <fieldlabel>qmd_questiontype</fieldlabel>\n          <fieldentry>' + bbType + '</fieldentry>\n        </qtimetadatafield>\n';
+  xml += '      </qtimetadata>\n    </itemmetadata>\n';
+
+  xml += '    <presentation>\n      <material>\n        <mattext texttype="text/html">' + escapeXml(q.text) + '</mattext>\n      </material>\n';
+
+  if (q.type === 'multiple_choice' || q.type === 'true_false') xml += genChoicePres(q, 'Single');
+  else if (q.type === 'multiple_answer') xml += genChoicePres(q, 'Multiple');
+  else if (q.type === 'ordering') xml += genOrderPres(q);
+  else if (q.type === 'matching') xml += genMatchPres(q);
+  else if (q.type === 'short_answer') xml += genShortPres(q);
+  else if (q.type === 'numeric') xml += genNumericPres(q);
+  else xml += genChoicePres(q, 'Single');
+
+  xml += '    </presentation>\n';
+
+  xml += '    <resprocessing>\n      <outcomes>\n        <decvar varname="SCORE" vartype="Decimal" maxvalue="100" minvalue="0" defaultval="0"/>\n      </outcomes>\n';
+
+  if (q.type === 'multiple_choice' || q.type === 'true_false') xml += genChoiceResp(q);
+  else if (q.type === 'multiple_answer') xml += genMultiResp(q);
+  else if (q.type === 'ordering') xml += genOrderResp(q);
+  else if (q.type === 'matching') xml += genMatchResp(q);
+  else if (q.type === 'short_answer') xml += genShortResp(q);
+  else if (q.type === 'numeric') xml += genNumericResp(q);
+  else xml += genChoiceResp(q);
+
+  xml += '    </resprocessing>\n';
+
+  if (q.correctFeedback) {
+    xml += '    <itemfeedback ident="correct_fb" view="Candidate">\n      <flow_mat>\n        <material>\n          <mattext texttype="text/html">' + escapeXml(q.correctFeedback) + '</mattext>\n        </material>\n      </flow_mat>\n    </itemfeedback>\n';
+  }
+  if (q.incorrectFeedback) {
+    xml += '    <itemfeedback ident="incorrect_fb" view="Candidate">\n      <flow_mat>\n        <material>\n          <mattext texttype="text/html">' + escapeXml(q.incorrectFeedback) + '</mattext>\n        </material>\n      </flow_mat>\n    </itemfeedback>\n';
+  }
+  xml += '  </item>\n';
+  return xml;
+}
+
+function genChoicePres(q, card) {
+  let x = '      <response_lid ident="RESP1" rcardinality="' + card + '">\n        <render_choice>\n';
+  for (const o of q.options) {
+    x += '          <response_label ident="' + escapeXml(o.label) + '">\n            <material>\n              <mattext texttype="text/html">' + escapeXml(o.text) + '</mattext>\n            </material>\n          </response_label>\n';
+  }
+  x += '        </render_choice>\n      </response_lid>\n';
+  return x;
+}
+
+function genChoiceResp(q) {
+  const c = q.options.find(o => o.correct);
+  if (!c) return '';
+  let x = '      <respcondition>\n        <conditionvar>\n          <varequal respident="RESP1">' + escapeXml(c.label) + '</varequal>\n        </conditionvar>\n        <setvar action="Set" varname="SCORE">' + q.points + '</setvar>\n';
+  if (q.correctFeedback) x += '        <displayfeedback feedbacktype="Response" linkrefid="correct_fb"/>\n';
+  x += '      </respcondition>\n      <respcondition>\n        <conditionvar>\n          <not><varequal respident="RESP1">' + escapeXml(c.label) + '</varequal></not>\n        </conditionvar>\n        <setvar action="Set" varname="SCORE">0</setvar>\n';
+  if (q.incorrectFeedback) x += '        <displayfeedback feedbacktype="Response" linkrefid="incorrect_fb"/>\n';
+  x += '      </respcondition>\n';
+  return x;
+}
+
+function genMultiResp(q) {
+  const cc = q.options.filter(o => o.correct).map(o => o.label);
+  const wc = q.options.filter(o => !o.correct).map(o => o.label);
+  let x = '      <respcondition>\n        <conditionvar>\n';
+  if (cc.length > 1 || wc.length > 0) {
+    x += '          <and>\n';
+    for (const l of cc) x += '            <varequal respident="RESP1">' + escapeXml(l) + '</varequal>\n';
+    for (const l of wc) x += '            <not><varequal respident="RESP1">' + escapeXml(l) + '</varequal></not>\n';
+    x += '          </and>\n';
+  } else if (cc.length === 1) {
+    x += '          <varequal respident="RESP1">' + escapeXml(cc[0]) + '</varequal>\n';
+  }
+  x += '        </conditionvar>\n        <setvar action="Set" varname="SCORE">' + q.points + '</setvar>\n';
+  if (q.correctFeedback) x += '        <displayfeedback feedbacktype="Response" linkrefid="correct_fb"/>\n';
+  x += '      </respcondition>\n      <respcondition>\n        <conditionvar>\n          <other/>\n        </conditionvar>\n        <setvar action="Set" varname="SCORE">0</setvar>\n';
+  if (q.incorrectFeedback) x += '        <displayfeedback feedbacktype="Response" linkrefid="incorrect_fb"/>\n';
+  x += '      </respcondition>\n';
+  return x;
+}
+
+function genOrderPres(q) {
+  let x = '';
+  for (let i = 0; i < q.options.length; i++) {
+    x += '      <response_lid ident="RESP' + (i+1) + '" rcardinality="Single">\n        <material>\n          <mattext texttype="text/html">' + escapeXml(q.options[i].text) + '</mattext>\n        </material>\n        <render_choice>\n';
+    for (let j = 0; j < q.options.length; j++) {
+      x += '          <response_label ident="POS' + (j+1) + '">\n            <material>\n              <mattext texttype="text/html">Posición ' + (j+1) + '</mattext>\n            </material>\n          </response_label>\n';
+    }
+    x += '        </render_choice>\n      </response_lid>\n';
+  }
+  return x;
+}
+
+function genOrderResp(q) {
+  let x = '';
+  const p = (q.points / q.options.length).toFixed(2);
+  for (let i = 0; i < q.options.length; i++) {
+    x += '      <respcondition>\n        <conditionvar>\n          <varequal respident="RESP' + (i+1) + '">POS' + (i+1) + '</varequal>\n        </conditionvar>\n        <setvar action="Add" varname="SCORE">' + p + '</setvar>\n      </respcondition>\n';
+  }
+  return x;
+}
+
+function genMatchPres(q) {
+  let x = '';
+  for (let i = 0; i < q.matches.length; i++) {
+    x += '      <response_lid ident="RESP' + (i+1) + '" rcardinality="Single">\n        <material>\n          <mattext texttype="text/html">' + escapeXml(q.matches[i].term) + '</mattext>\n        </material>\n        <render_choice shuffle="Yes">\n';
+    for (let j = 0; j < q.matches.length; j++) {
+      x += '          <response_label ident="DEF' + (j+1) + '">\n            <material>\n              <mattext texttype="text/html">' + escapeXml(q.matches[j].definition) + '</mattext>\n            </material>\n          </response_label>\n';
+    }
+    x += '        </render_choice>\n      </response_lid>\n';
+  }
+  return x;
+}
+
+function genMatchResp(q) {
+  let x = '';
+  const p = (q.points / q.matches.length).toFixed(2);
+  for (let i = 0; i < q.matches.length; i++) {
+    x += '      <respcondition>\n        <conditionvar>\n          <varequal respident="RESP' + (i+1) + '">DEF' + (i+1) + '</varequal>\n        </conditionvar>\n        <setvar action="Add" varname="SCORE">' + p + '</setvar>\n      </respcondition>\n';
+  }
+  return x;
+}
+
+function genShortPres(q) {
+  return '      <response_str ident="RESP1" rcardinality="Single">\n        <render_fib>\n          <response_label ident="A"/>\n        </render_fib>\n      </response_str>\n';
+}
+
+function genShortResp(q) {
+  let x = '';
+  if (q.answers.length === 0) {
+    x += '      <respcondition>\n        <conditionvar><other/></conditionvar>\n        <setvar action="Set" varname="SCORE">0</setvar>\n      </respcondition>\n';
+    return x;
+  }
+  x += '      <respcondition>\n        <conditionvar>\n          <or>\n';
+  for (const a of q.answers) x += '            <varequal respident="RESP1" case="No">' + escapeXml(a) + '</varequal>\n';
+  x += '          </or>\n        </conditionvar>\n        <setvar action="Set" varname="SCORE">' + q.points + '</setvar>\n';
+  if (q.correctFeedback) x += '        <displayfeedback feedbacktype="Response" linkrefid="correct_fb"/>\n';
+  x += '      </respcondition>\n      <respcondition>\n        <conditionvar><other/></conditionvar>\n        <setvar action="Set" varname="SCORE">0</setvar>\n';
+  if (q.incorrectFeedback) x += '        <displayfeedback feedbacktype="Response" linkrefid="incorrect_fb"/>\n';
+  x += '      </respcondition>\n';
+  return x;
+}
+
+function genNumericPres(q) {
+  return '      <response_num ident="RESP1" rcardinality="Single" numtype="Decimal">\n        <render_fib>\n          <response_label ident="A"/>\n        </render_fib>\n      </response_num>\n';
+}
+
+function genNumericResp(q) {
+  let x = '';
+  for (const a of q.answers) {
+    x += '      <respcondition>\n        <conditionvar>\n          <varequal respident="RESP1">' + escapeXml(a) + '</varequal>\n        </conditionvar>\n        <setvar action="Set" varname="SCORE">' + q.points + '</setvar>\n';
+    if (q.correctFeedback) x += '        <displayfeedback feedbacktype="Response" linkrefid="correct_fb"/>\n';
+    x += '      </respcondition>\n';
+  }
+  if (q.answers.length > 0) {
+    x += '      <respcondition>\n        <conditionvar><other/></conditionvar>\n        <setvar action="Set" varname="SCORE">0</setvar>\n';
+    if (q.incorrectFeedback) x += '        <displayfeedback feedbacktype="Response" linkrefid="incorrect_fb"/>\n';
+    x += '      </respcondition>\n';
+  }
+  return x;
+}
+
+function generateQTI(questions, poolName) {
+  let x = '<?xml version="1.0" encoding="UTF-8"?>\n<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2">\n';
+  for (let i = 0; i < questions.length; i++) x += generateItemXML(questions[i], i);
+  x += '</questestinterop>\n';
+  return x;
+}
+
+function generateManifest(poolName) {
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<manifest identifier="manifest" xmlns="http://www.imsglobal.org/xsd/imscp_v1p1">\n  <metadata>\n    <schema>IMS Content</schema>\n    <schemaversion>1.1</schemaversion>\n  </metadata>\n  <organizations default="org1">\n    <organization identifier="org1" structure="hierarchical">\n      <title>' + escapeXml(poolName) + '</title>\n    </organization>\n  </organizations>\n  <resources>\n    <resource identifier="res1" type="imsqti_item_xmlv2p1" href="res00001.dat">\n      <file href="res00001.dat"/>\n    </resource>\n  </resources>\n</manifest>\n';
+}
+
+// =====================================================================
+// UI: acciones de los botones
+// =====================================================================
+
+const EXAMPLE = `1. [puntos:5] Un municipio instala miles de sensores de tránsito que generan datos cada segundo, pero un año después sus decisiones de movilidad siguen igual. ¿Qué necesita para que esos datos generen valor?
+*A) Un proceso analítico que convierta los datos crudos en conocimiento útil para decidir.
+B) Más sensores distribuidos por la ciudad para ampliar la cobertura de captura de datos.
+C) Un sistema de almacenamiento mayor que conserve todo el histórico de mediciones.
+D) Una red de transmisión más veloz que envíe los datos en tiempo real al servidor.
++ ¡Correcto! Los datos requieren un proceso analítico para convertirse en conocimiento accionable.
+- Incorrecto. Ampliar captura o almacenamiento no resuelve el problema de transformar datos en decisiones.
+
+2. [puntos:4] [tipo:multiple_answer] ¿Cuáles de los siguientes son ejemplos de IA estrecha (ANI) disponible hoy?
+*A) Asistentes de voz como Alexa o Siri
+*B) Sistemas de recomendación de Netflix o Spotify
+C) Un robot que aprende cualquier tarea nueva sin entrenamiento adicional
+*D) Chatbots como ChatGPT o Claude
++ Correcto: todas excepto el robot que aprende cualquier tarea sola (eso sería AGI).
+- Recuerda: la IA actual es estrecha; solo resuelve tareas específicas.
+
+3. [puntos:2] [tipo:true_false] La inteligencia artificial general (AGI) existe y se usa comercialmente hoy en día.
+*A) Falso
+B) Verdadero
++ ¡Correcto! La IA actual es estrecha (ANI), la AGI aún no existe.
+- Revisa: la afirmación es falsa. La AGI no existe comercialmente hoy.
+
+4. [puntos:3] [tipo:ordering] Ordena las etapas del proceso analítico de datos:
+=) Captura de datos
+=) Limpieza y transformación
+=) Análisis estadístico
+=) Toma de decisiones
++ Correcto: captura → limpieza → análisis → decisión.
+- Revisa el flujo del proceso analítico.
+
+5. [puntos:4] [tipo:matching] Relaciona cada concepto con su definición:
+A) Dato | Hecho bruto sin procesar
+B) Información | Datos organizados con contexto
+C) Conocimiento | Información interpretada y aplicable
+D) Sabiduría | Conocimiento aplicado con juicio
++ Correcto: es la jerarquía DIKW.
+- Cada nivel agrega valor sobre el anterior.
+
+6. [puntos:3] [tipo:short_answer] ¿Qué sigla identifica a la Inteligencia Artificial General?
+= AGI
+= Inteligencia Artificial General
++ Correcto: AGI (Artificial General Intelligence).
+- La sigla es AGI.
+
+7. [puntos:2] [tipo:numeric] ¿Cuántos bits tiene un byte?
+= 8
++ Correcto: 1 byte = 8 bits.
+- 1 byte = 8 bits.`;
+
+const PROMPT = `Tengo preguntas para subir a Blackboard con retroalimentación y puntuación. Conviértelas a este formato (una pregunta por bloque):
+
+N. [puntos:P] [tipo:T] Texto de la pregunta
+*A) Respuesta correcta (con * al inicio)
+B) Otra respuesta
+C) Otra respuesta
+D) Otra respuesta
++ Retroalimentación para respuesta correcta
+- Retroalimentación para respuesta incorrecta
+
+Reglas:
+- [puntos:P] = puntos del reactivo (puede ser decimal)
+- [tipo:T] = multiple_choice | multiple_answer | true_false | ordering | matching | short_answer | numeric
+  (si es opción múltiple simple, omite [tipo:])
+- Marca con * la(s) respuesta(s) correcta(s)
+- Para ordering: usa "=) item" en el orden correcto
+- Para matching: usa "A) término | definición"
+- Para short_answer/numeric: usa "= respuesta"
+- + = retroalimentación respuesta correcta
+- - = retroalimentación respuesta incorrecta
+- Conserva el idioma original de las preguntas
+- Genera retroalimentación pedagógica específica por pregunta
+
+Aquí están las preguntas:
+[PEGA AQUÍ TU EVALUACIÓN]`;
+
+const inputEl = document.getElementById('input');
+const poolEl = document.getElementById('poolName');
+const statusEl = document.getElementById('status');
+const statsEl = document.getElementById('stats');
+const generateBtn = document.getElementById('generateBtn');
+
+function showStatus(type, html) {
+  statusEl.className = 'status show ' + type;
+  statusEl.innerHTML = html;
+}
+
+function showStats(qs) {
+  if (!qs.length) { statsEl.innerHTML = ''; return; }
+  const byType = {};
+  let totalPoints = 0;
+  let withFb = 0;
+  for (const q of qs) {
+    byType[q.type] = (byType[q.type] || 0) + 1;
+    totalPoints += q.points;
+    if (q.correctFeedback || q.incorrectFeedback) withFb++;
+  }
+  let html = '<span class="stat-pill"><strong>' + qs.length + '</strong> preguntas</span>';
+  html += '<span class="stat-pill"><strong>' + totalPoints + '</strong> puntos totales</span>';
+  html += '<span class="stat-pill"><strong>' + withFb + '/' + qs.length + '</strong> con retroalimentación</span>';
+  for (const t in byType) {
+    html += '<span class="stat-pill">' + t + ': <strong>' + byType[t] + '</strong></span>';
+  }
+  statsEl.innerHTML = html;
+}
+
+// Validación previa al generar
+function validate(qs) {
+  const errors = [];
+  qs.forEach((q, i) => {
+    const n = i + 1;
+    if (q.type === 'multiple_choice' || q.type === 'true_false') {
+      const correct = q.options.filter(o => o.correct).length;
+      if (correct === 0) errors.push('Pregunta ' + n + ' (' + q.type + '): ninguna opción marcada como correcta con *');
+      if (q.type === 'multiple_choice' && correct > 1) errors.push('Pregunta ' + n + ' (multiple_choice): solo debe haber 1 correcta, encontró ' + correct);
+      if (q.options.length < 2) errors.push('Pregunta ' + n + ': necesita al menos 2 opciones');
+    }
+    if (q.type === 'multiple_answer') {
+      const correct = q.options.filter(o => o.correct).length;
+      if (correct === 0) errors.push('Pregunta ' + n + ' (multiple_answer): necesita al menos 1 correcta marcada con *');
+      if (q.options.length < 2) errors.push('Pregunta ' + n + ': necesita al menos 2 opciones');
+    }
+    if (q.type === 'ordering' && q.options.length < 2) errors.push('Pregunta ' + n + ' (ordering): necesita al menos 2 ítems');
+    if (q.type === 'matching' && q.matches.length < 2) errors.push('Pregunta ' + n + ' (matching): necesita al menos 2 pares');
+    if ((q.type === 'short_answer' || q.type === 'numeric') && q.answers.length === 0) {
+      errors.push('Pregunta ' + n + ' (' + q.type + '): falta respuesta correcta con =');
+    }
+  });
+  return errors;
+}
+
+generateBtn.addEventListener('click', async () => {
+  const text = inputEl.value.trim();
+  if (!text) {
+    showStatus('error', '⚠ Pega primero las preguntas.');
+    return;
+  }
+  if (typeof JSZip === 'undefined') {
+    showStatus('error', '⚠ No se pudo cargar JSZip. Verifica tu conexión a internet.');
+    return;
+  }
+
+  let qs;
+  try {
+    qs = parseQuestions(text);
+  } catch (e) {
+    showStatus('error', '✗ Error al parsear: ' + e.message);
+    return;
+  }
+
+  if (qs.length === 0) {
+    showStatus('error', '⚠ No se encontraron preguntas. Asegúrate de iniciar cada una con <code>N.</code>');
+    return;
+  }
+
+  const errors = validate(qs);
+  if (errors.length) {
+    let html = '⚠ Se encontraron <strong>' + errors.length + '</strong> problemas:<ul>';
+    for (const e of errors) html += '<li>' + e + '</li>';
+    html += '</ul>Corrígelos y vuelve a intentarlo.';
+    showStatus('error', html);
+    return;
+  }
+
+  showStatus('info', '⚙ Generando QTI 2.1...');
+
+  try {
+    const poolName = poolEl.value.trim() || 'Banco de Preguntas';
+    const qtiXml = generateQTI(qs, poolName);
+    const manifestXml = generateManifest(poolName);
+
+    const zip = new JSZip();
+    zip.file('imsmanifest.xml', manifestXml);
+    zip.file('res00001.dat', qtiXml);
+
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const fileName = (poolName.replace(/[^a-zA-Z0-9-_]/g, '_').substring(0, 50) || 'banco') + '.zip';
+    if (typeof saveAs !== 'undefined') {
+      saveAs(blob, fileName);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fileName;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    let html = '✓ <strong>' + qs.length + ' preguntas</strong> generadas y descargadas como <code>' + fileName + '</code><br>';
+    html += '<small>Importa en Blackboard: Administrar bancos de preguntas → + → Importar desde paquete QTI 2.1</small>';
+    showStatus('success', html);
+    showStats(qs);
+  } catch (e) {
+    showStatus('error', '✗ Error al generar ZIP: ' + e.message);
+  }
+});
+
+document.getElementById('exampleBtn').addEventListener('click', () => {
+  inputEl.value = EXAMPLE;
+  showStatus('info', '📋 Ejemplo cargado con los 7 tipos de pregunta. Da clic en <strong>Generar ZIP</strong> para probar.');
+  const qs = parseQuestions(EXAMPLE);
+  showStats(qs);
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  inputEl.value = '';
+  statusEl.className = 'status';
+  statusEl.innerHTML = '';
+  statsEl.innerHTML = '';
+});
+
+document.getElementById('copyFormatBtn').addEventListener('click', () => {
+  const format = `FORMATO QTI PARA BLACKBOARD
+
+1. [puntos:5] [tipo:multiple_choice] Pregunta de opción múltiple
+*A) Respuesta correcta
+B) Otra
+C) Otra
++ Feedback correcto
+- Feedback incorrecto
+
+2. [puntos:4] [tipo:multiple_answer] Varias correctas
+*A) Correcta
+*B) Correcta
+C) Incorrecta
++ Feedback
+- Feedback
+
+3. [puntos:2] [tipo:true_false] Afirmación
+*A) Verdadero
+B) Falso
++ Feedback
+- Feedback
+
+4. [puntos:3] [tipo:ordering] Ordena:
+=) Primer paso
+=) Segundo paso
+=) Tercer paso
++ Feedback
+- Feedback
+
+5. [puntos:4] [tipo:matching] Relaciona:
+A) Término 1 | Definición 1
+B) Término 2 | Definición 2
++ Feedback
+- Feedback
+
+6. [puntos:3] [tipo:short_answer] ¿Respuesta corta?
+= respuesta correcta
+= otra respuesta válida
++ Feedback
+- Feedback
+
+7. [puntos:2] [tipo:numeric] ¿2+2?
+= 4
++ Feedback
+- Feedback`;
+  navigator.clipboard.writeText(format).then(() => {
+    showStatus('success', '📋 Formato copiado al portapapeles.');
+  }).catch(() => {
+    showStatus('error', 'No se pudo copiar. Selecciona y copia manualmente.');
+  });
+});
+
+document.getElementById('copyPromptBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(PROMPT).then(() => {
+    showStatus('success', '📋 Prompt para Gemini copiado al portapapeles.');
+  }).catch(() => {
+    showStatus('error', 'No se pudo copiar.');
+  });
+});
+
+// Validación en vivo: stats al escribir
+inputEl.addEventListener('input', () => {
+  const text = inputEl.value.trim();
+  if (!text) { statsEl.innerHTML = ''; return; }
+  try {
+    const qs = parseQuestions(text);
+    if (qs.length > 0) showStats(qs);
+    else statsEl.innerHTML = '';
+  } catch (e) {
+    statsEl.innerHTML = '';
+  }
+});
+</script>
+</body>
+</html>
